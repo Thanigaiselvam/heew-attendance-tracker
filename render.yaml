@@ -2,7 +2,7 @@ services:
   - type: web
     name: heew-attendance-tracker
     runtime: node
-    buildCommand: npm install && npm run build && npm run seed
+    buildCommand: npm run render-build
     startCommand: npm start
     envVars:
       - key: NODE_ENV

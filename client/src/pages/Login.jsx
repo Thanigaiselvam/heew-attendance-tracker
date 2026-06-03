@@ -55,7 +55,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={tab === 'employee' ? 'you@company.com' : 'admin@heew.com'}
+              placeholder="you@company.com"
               required
             />
           </div>
@@ -75,17 +75,6 @@ export default function Login() {
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
-
-        {tab === 'employee' && (
-          <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Demo: alice@heew.com, bob@heew.com, carol@heew.com
-          </p>
-        )}
-        {tab === 'admin' && (
-          <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Demo: admin@heew.com / admin123
-          </p>
-        )}
       </div>
     </div>
   );
