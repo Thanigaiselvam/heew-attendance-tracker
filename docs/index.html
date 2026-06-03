@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEEW Attendance Tracker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f1419, #1a2332);
+      color: #e8edf4;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    .sub { color: #8b9cb3; font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .card {
+      background: #1a2332;
+      border: 1px solid #2d3a4f;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .tabs button {
+      flex: 1; padding: 0.6rem; border: 1px solid #2d3a4f;
+      background: #0f1419; color: #8b9cb3; border-radius: 8px;
+      cursor: pointer; font-weight: 600;
+    }
+    .tabs button.on { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+    label { display: block; font-size: 0.85rem; color: #8b9cb3; margin-bottom: 0.35rem; }
+    input, select {
+      width: 100%; padding: 0.65rem; margin-bottom: 0.75rem;
+      border: 1px solid #2d3a4f; border-radius: 8px;
+      background: #0f1419; color: #e8edf4; font-size: 1rem;
+    }
+    .btn {
+      padding: 0.65rem 1rem; border: none; border-radius: 8px;
+      font-weight: 600; cursor: pointer; margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .btn-p { background: #3b82f6; color: #fff; }
+    .btn-g { background: #22c55e; color: #fff; }
+    .btn-w { background: #f59e0b; color: #1a1a1a; }
+    .btn-r { background: #ef4444; color: #fff; }
+    .btn-s { background: #243044; color: #e8edf4; }
+    .hidden { display: none !important; }
+    .badge {
+      display: inline-block; padding: 0.2rem 0.55rem;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 700;
+    }
+    .b-work { background: rgba(34,197,94,.2); color: #22c55e; }
+    .b-break { background: rgba(245,158,11,.2); color: #f59e0b; }
+    .b-off { background: rgba(139,156,179,.2); color: #8b9cb3; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+    .stat { background: #0f1419; border-radius: 8px; padding: 0.75rem; }
+    .stat small { color: #8b9cb3; }
+    .stat strong { display: block; font-size: 1.25rem; margin-top: 0.25rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #2d3a4f; }
+    th { color: #8b9cb3; }
+    .err { color: #ef4444; font-size: 0.9rem; margin-top: 0.5rem; }
+    .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .nav button { background: #243044; color: #e8edf4; border: none; padding: 0.5rem 0.85rem; border-radius: 8px; cursor: pointer; }
+    .nav button.on { background: #3b82f6; }
+    header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- LOGIN -->
+    <div id="screen-login">
+      <h1>HEEW Attendance</h1>
+      <p class="sub">Works on GitHub Pages — no server needed</p>
+      <div class="card">
+        <div class="tabs">
+          <button type="button" id="tab-emp" class="on" onclick="setLoginTab('emp')">Employee</button>
+          <button type="button" id="tab-adm" onclick="setLoginTab('adm')">Admin</button>
+        </div>
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@company.com" />
+        <div id="pw-box" class="hidden">
+          <label>Password</label>
+          <input type="password" id="login-pw" placeholder="Admin password" />
+        </div>
+        <p id="login-err" class="err hidden"></p>
+        <button type="button" class="btn btn-p" style="width:100%;margin-top:0.5rem" onclick="doLogin()">Sign In</button>
+        <p class="sub" style="margin-top:1rem;font-size:0.8rem">
+          First time? Admin: <strong>admin@heew.com</strong> / <strong>admin123</strong><br>
+          Then add employees in Admin panel.
+        </p>
+      </div>
+    </div>
+
+    <!-- EMPLOYEE APP -->
+    <div id="screen-emp" class="hidden">
+      <header>
+        <div>
+          <h1>Employee</h1>
+          <p class="sub" id="emp-name"></p>
+        </div>
+        <button class="btn btn-s" onclick="logout()">Sign Out</button>
+      </header>
+      <div class="card">
+        <p>Status: <span id="emp-status" class="badge b-off">Offline</span></p>
+        <div style="margin-top:1rem" id="emp-actions"></div>
+      </div>
+      <div class="stats" style="margin-bottom:1rem">
+        <div class="stat"><small>Today</small><strong id="st-today">0h</strong></div>
+        <div class="stat"><small>This month</small><strong id="st-month">0h</strong></div>
+        <div class="stat"><small>Days worked</small><strong id="st-days">0</strong></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:0.75rem">Recent sessions</h3>
+        <table><thead><tr><th>In</th><th>Out</th><th>Work</th></tr></thead><tbody id="emp-history"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ADMIN APP -->
+    <div id="screen-adm" class="hidden">
+      <header>
+        <div><h1>Admin</h1><p class="sub">Dashboard</p></div>
+        <button class="btn btn-s" onclick="logout()">Sign Out</button>
+      </header>
+      <div class="nav">
+        <button class="on" onclick="admView('dash',this)">Dashboard</button>
+        <button onclick="admView('emps',this)">Employees</button>
+        <button onclick="admView('att',this)">Attendance</button>
+        <button onclick="admView('pay',this)">Payroll</button>
+      </div>
+      <div id="adm-dash" class="card">
+        <div class="stats">
+          <div class="stat"><small>Employees</small><strong id="ad-total">0</strong></div>
+          <div class="stat"><small>Active now</small><strong id="ad-active">0</strong></div>
+        </div>
+      </div>
+      <div id="adm-emps" class="card hidden">
+        <h3 style="margin-bottom:0.75rem">Add employee</h3>
+        <input id="ne-name" placeholder="Full name" />
+        <input id="ne-email" type="email" placeholder="Email" />
+        <input id="ne-rate" type="number" placeholder="Hourly rate" value="25" />
+        <button class="btn btn-p" onclick="addEmployee()">Add</button>
+        <table style="margin-top:1rem"><thead><tr><th>Name</th><th>Email</th><th>Rate</th><th>Status</th></tr></thead><tbody id="adm-emp-list"></tbody></table>
+      </div>
+      <div id="adm-att" class="card hidden">
+        <table><thead><tr><th>Employee</th><th>Check in</th><th>Check out</th><th>Hours</th></tr></thead><tbody id="adm-att-list"></tbody></table>
+      </div>
+      <div id="adm-pay" class="card hidden">
+        <p class="sub" style="margin-bottom:0.75rem">Payroll estimate (current month)</p>
+        <table><thead><tr><th>Employee</th><th>Hours</th><th>Rate</th><th>Pay</th></tr></thead><tbody id="adm-pay-list"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = 'heew_static_v1';
+    const defaultData = () => ({
+      admin: { email: 'admin@heew.com', password: 'admin123' },
+      employees: [
+        { id: 1, name: 'Alice Johnson', email: 'alice@heew.com', rate: 25, active: true },
+        { id: 2, name: 'Bob Smith', email: 'bob@heew.com', rate: 22, active: true },
+      ],
+      sessions: [],
+      nextId: 3,
+      nextSid: 1,
+    });
+
+    function load() {
+      try {
+        const s = localStorage.getItem(KEY);
+        return s ? JSON.parse(s) : defaultData();
+      } catch { return defaultData(); }
+    }
+    function save(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
+
+    let DB = load();
+    let user = null;
+
+    function fmt(ms) {
+      if (!ms || ms < 0) return '0h 0m';
+      const m = Math.floor(ms / 60000);
+      return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+    }
+    function hrs(ms) { return Math.round((ms / 3600000) * 100) / 100; }
+    function now() { return Date.now(); }
+    function dayStr(t) { return new Date(t).toISOString().slice(0, 10); }
+    function monthStr(t) { return new Date(t).toISOString().slice(0, 7); }
+
+    function sessionWorkMs(s, end = now()) {
+      const gross = (s.out || end) - s.in;
+      let breakMs = 0;
+      (s.breaks || []).forEach(b => {
+        breakMs += (b.end || end) - b.start;
+      });
+      return Math.max(0, gross - breakMs);
+    }
+
+    function openSession(empId) {
+      return DB.sessions.find(s => s.empId === empId && !s.out);
+    }
+
+    function setLoginTab(t) {
+      document.getElementById('tab-emp').classList.toggle('on', t === 'emp');
+      document.getElementById('tab-adm').classList.toggle('on', t === 'adm');
+      document.getElementById('pw-box').classList.toggle('hidden', t !== 'adm');
+    }
+
+    function show(id) {
+      ['screen-login','screen-emp','screen-adm'].forEach(s => document.getElementById(s).classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function doLogin() {
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const err = document.getElementById('login-err');
+      err.classList.add('hidden');
+      const tab = document.getElementById('tab-adm').classList.contains('on') ? 'adm' : 'emp';
+
+      if (tab === 'adm') {
+        const pw = document.getElementById('login-pw').value;
+        if (email === DB.admin.email && pw === DB.admin.password) {
+          user = { role: 'admin' };
+          show('screen-adm');
+          renderAdmin();
+          return;
+        }
+        err.textContent = 'Invalid admin email or password';
+        err.classList.remove('hidden');
+        return;
+      }
+
+      const emp = DB.employees.find(e => e.email === email && e.active);
+      if (!emp) {
+        err.textContent = 'Employee not found. Ask admin to add your email.';
+        err.classList.remove('hidden');
+        return;
+      }
+      user = { role: 'employee', emp };
+      show('screen-emp');
+      renderEmployee();
+    }
+
+    function logout() {
+      user = null;
+      show('screen-login');
+    }
+
+    function renderEmployee() {
+      const emp = user.emp;
+      document.getElementById('emp-name').textContent = emp.name + ' · ' + emp.email;
+      const sess = openSession(emp.id);
+      const onBreak = sess && sess.breaks && sess.breaks.length && !sess.breaks[sess.breaks.length - 1].end;
+
+      const st = document.getElementById('emp-status');
+      const act = document.getElementById('emp-actions');
+      if (!sess) {
+        st.textContent = 'Offline'; st.className = 'badge b-off';
+        act.innerHTML = '<button class="btn btn-g" onclick="checkIn()">Check In</button>';
+      } else if (onBreak) {
+        st.textContent = 'On Break'; st.className = 'badge b-break';
+        act.innerHTML = '<button class="btn btn-p" onclick="resumeWork()">Resume Work</button><button class="btn btn-r" onclick="checkOut()">Final Logout</button>';
+      } else {
+        st.textContent = 'Working'; st.className = 'badge b-work';
+        act.innerHTML = '<button class="btn btn-w" onclick="takeBreak()">Take Break</button><button class="btn btn-r" onclick="checkOut()">Final Logout</button>';
+      }
+
+      const today = dayStr(now());
+      const month = monthStr(now());
+      const my = DB.sessions.filter(s => s.empId === emp.id);
+      let tMs = 0, mMs = 0;
+      const days = new Set();
+      my.forEach(s => {
+        const w = sessionWorkMs(s, s.out || now());
+        if (dayStr(s.in) === today) tMs += w;
+        if (monthStr(s.in) === month) { mMs += w; days.add(dayStr(s.in)); }
+      });
+      document.getElementById('st-today').textContent = fmt(tMs);
+      document.getElementById('st-month').textContent = hrs(mMs) + 'h';
+      document.getElementById('st-days').textContent = days.size;
+
+      const tbody = document.getElementById('emp-history');
+      tbody.innerHTML = my.slice(-10).reverse().map(s =>
+        `<tr><td>${new Date(s.in).toLocaleString()}</td><td>${s.out ? new Date(s.out).toLocaleString() : '—'}</td><td>${fmt(sessionWorkMs(s))}</td></tr>`
+      ).join('');
+    }
+
+    function checkIn() {
+      if (openSession(user.emp.id)) return;
+      DB.sessions.push({ id: DB.nextSid++, empId: user.emp.id, in: now(), out: null, breaks: [] });
+      save(DB); renderEmployee();
+    }
+    function takeBreak() {
+      const s = openSession(user.emp.id);
+      if (!s) return;
+      const last = s.breaks[s.breaks.length - 1];
+      if (last && !last.end) return;
+      s.breaks.push({ start: now(), end: null });
+      save(DB); renderEmployee();
+    }
+    function resumeWork() {
+      const s = openSession(user.emp.id);
+      if (!s) return;
+      const last = s.breaks[s.breaks.length - 1];
+      if (last && !last.end) last.end = now();
+      save(DB); renderEmployee();
+    }
+    function checkOut() {
+      const s = openSession(user.emp.id);
+      if (!s) return;
+      const last = s.breaks[s.breaks.length - 1];
+      if (last && !last.end) last.end = now();
+      s.out = now();
+      save(DB); renderEmployee();
+    }
+
+    function admView(v, btn) {
+      document.querySelectorAll('#screen-adm .nav button').forEach(b => b.classList.remove('on'));
+      if (btn) btn.classList.add('on');
+      ['adm-dash','adm-emps','adm-att','adm-pay'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      document.getElementById('adm-' + v).classList.remove('hidden');
+    }
+
+    function renderAdmin() {
+      const emps = DB.employees.filter(e => e.active);
+      document.getElementById('ad-total').textContent = emps.length;
+      document.getElementById('ad-active').textContent = emps.filter(e => openSession(e.id)).length;
+
+      document.getElementById('adm-emp-list').innerHTML = DB.employees.filter(e => e.active).map(e => {
+        const st = openSession(e.id) ? (e.breaks ? 'working' : 'working') : 'offline';
+        const sess = openSession(e.id);
+        const label = !sess ? 'offline' : (sess.breaks?.length && !sess.breaks[sess.breaks.length-1].end ? 'break' : 'working');
+        return `<tr><td>${e.name}</td><td>${e.email}</td><td>$${e.rate}</td><td>${label}</td></tr>`;
+      }).join('');
+
+      document.getElementById('adm-att-list').innerHTML = DB.sessions.slice().reverse().slice(0, 30).map(s => {
+        const e = DB.employees.find(x => x.id === s.empId);
+        return `<tr><td>${e?.name||'?'}</td><td>${new Date(s.in).toLocaleString()}</td><td>${s.out?new Date(s.out).toLocaleString():'Active'}</td><td>${hrs(sessionWorkMs(s))}h</td></tr>`;
+      }).join('');
+
+      const month = monthStr(now());
+      document.getElementById('adm-pay-list').innerHTML = emps.map(e => {
+        const ms = DB.sessions.filter(s => s.empId === e.id && monthStr(s.in) === month)
+          .reduce((a, s) => a + sessionWorkMs(s), 0);
+        const h = hrs(ms);
+        return `<tr><td>${e.name}</td><td>${h}h</td><td>$${e.rate}</td><td>$${(h*e.rate).toFixed(2)}</td></tr>`;
+      }).join('');
+    }
+
+    function addEmployee() {
+      const name = document.getElementById('ne-name').value.trim();
+      const email = document.getElementById('ne-email').value.trim().toLowerCase();
+      const rate = parseFloat(document.getElementById('ne-rate').value) || 0;
+      if (!name || !email) return alert('Name and email required');
+      if (DB.employees.some(e => e.email === email)) return alert('Email exists');
+      DB.employees.push({ id: DB.nextId++, name, email, rate, active: true });
+      save(DB);
+      document.getElementById('ne-name').value = '';
+      document.getElementById('ne-email').value = '';
+      renderAdmin();
+    }
+
+    setLoginTab('emp');
+  </script>
+</body>
+</html>
